@@ -1,0 +1,144 @@
+version: 2
+
+models:
+  - name: fct_revenue_events
+    columns:
+      - name: revenue_event_key
+        tests:
+          - unique
+          - not_null
+      - name: source_system
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["application", "manual_adjustment"]
+      - name: source_record_id
+        tests:
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: occurred_at
+        tests:
+          - not_null
+      - name: event_type
+        tests:
+          - not_null
+      - name: signed_amount_usd
+        tests:
+          - not_null
+      - name: source_updated_at
+        tests:
+          - not_null
+
+  - name: mart_monthly_revenue
+    columns:
+      - name: month_start
+        tests:
+          - unique
+          - not_null
+      - name: application_net_revenue_usd
+        tests:
+          - not_null
+      - name: manual_net_revenue_usd
+        tests:
+          - not_null
+      - name: net_revenue_usd
+        tests:
+          - not_null
+      - name: finance_control_total_usd
+        tests:
+          - not_null
+      - name: variance_usd
+        tests:
+          - not_null
+      - name: application_record_count
+        tests:
+          - not_null
+      - name: manual_record_count
+        tests:
+          - not_null
+
+  - name: dq_revenue_issues
+    columns:
+      - name: source_file
+        tests:
+          - not_null
+      - name: source_line_number
+        tests:
+          - not_null
+      - name: source_system
+        tests:
+          - not_null
+      - name: source_record_id
+        tests:
+          - not_null
+      - name: reason_code
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - ambiguous_source_version
+                  - duplicate_delivery
+                  - failed_transaction
+                  - field_count_mismatch
+                  - invalid_numeric_amount
+                  - invalid_timestamp
+                  - missing_stable_key
+                  - orphan_customer
+                  - outside_reporting_window
+                  - test_account
+                  - unapproved_adjustment
+                  - unsupported_currency
+      - name: severity
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["error", "warning"]
+      - name: detected_at
+        tests:
+          - not_null
+
+  - name: mart_capacity_unified
+    columns:
+      - name: period_start
+        tests:
+          - not_null
+      - name: owner_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["team", "designer"]
+      - name: owner_id
+        tests:
+          - not_null
+      - name: team_id
+        tests:
+          - not_null
+      - name: metric_name
+        tests:
+          - not_null
+      - name: metric_unit
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["points", "slides"]
+      - name: metric_value
+        tests:
+          - not_null
+      - name: logic_version
+        tests:
+          - not_null
+      - name: source_record_id
+        tests:
+          - unique
+          - not_null
