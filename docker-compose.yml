@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: data-eng-24slides
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-studioflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studioflow}
+      POSTGRES_DB: ${POSTGRES_DB:-studioflow}
+    ports:
+      # Host-side port. Defaults to 5434 -- 5432 is often already taken by a
+      # native/local PostgreSQL install (Windows/DBeaver users especially).
+      - "${POSTGRES_HOST_PORT:-5434}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-studioflow} -d ${POSTGRES_DB:-studioflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_data:
