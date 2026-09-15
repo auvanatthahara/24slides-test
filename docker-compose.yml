@@ -19,5 +19,56 @@ services:
       timeout: 5s
       retries: 10
 
+  # Core reproducible pipeline entry point -- needs nothing but Docker.
+  # docker compose run --rm pipeline python scripts/load_raw.py
+  # docker compose run --rm pipeline bash -c "cd dbt && dbt build --profiles-dir ."
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-studioflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studioflow}
+      POSTGRES_DB: ${POSTGRES_DB:-studioflow}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - .:/opt/pipeline
+
+  # Orchestration evidence: Airflow standalone (webserver+scheduler+triggerer,
+  # own internal metadata store) running the same load script + dbt project.
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-studioflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studioflow}
+      POSTGRES_DB: ${POSTGRES_DB:-studioflow}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      # dbt/logs and dbt/target in the bind-mounted project dir are owned by
+      # the host user from local runs -- the container's airflow user can't
+      # write there, so point dbt's own artifacts at the writable volume instead.
+      DBT_LOG_PATH: /opt/airflow/dbt_logs
+      DBT_TARGET_PATH: /opt/airflow/dbt_target
+    ports:
+      - "8080:8080"
+    volumes:
+      - airflow_home:/opt/airflow
+      - ./airflow/dags:/opt/airflow/dags
+      - .:/opt/airflow/project
+    command: ["standalone"]
+
 volumes:
   pg_data:
+  airflow_home:
