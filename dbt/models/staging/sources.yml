@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: customers
+      - name: application_transactions
+      - name: manual_adjustments
+      - name: fx_rates
+      - name: finance_control_totals
+      - name: capacity_records
+      - name: quarantined_records
