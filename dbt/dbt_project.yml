@@ -10,8 +10,19 @@ macro-paths: ["macros"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+vars:
+  reporting_window_start: "2026-01-01"
+  reporting_window_end: "2026-07-01"
+
+seeds:
+  studioflow:
+    +schema: seed
+
 models:
   studioflow:
     staging:
       +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
       +materialized: view
